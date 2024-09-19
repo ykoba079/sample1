@@ -1,0 +1,48 @@
+<html>
+<head>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        body,#renderCanvas { width: 100%; height: 100%;}
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = async function () {
+  // シーンを作成
+  const scene = new BABYLON.Scene(engine);
+
+// カメラを作成し、シーンに追加
+const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 10, BABYLON.Vector3.Zero(), scene);
+camera.attachControl(canvas, true);
+
+// 環境光を追加
+const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+
+    // スカイボックス用の立方体を作成
+    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size: 500}, scene);
+    // マテリアルを作成してPNGテクスチャを適用
+    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+    skyboxMaterial.backFaceCulling = false; // 立方体の内側に描画
+    // テクスチャを設定
+    const texture = new BABYLON.Texture("https://ja.wikipedia.org/wiki/%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB:Kaiyomaru_esashi.jpg", scene);
+    texture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    texture.uScale = -1; // 反転して内側に貼る
+    skyboxMaterial.diffuseTexture = texture;
+
+
+    
+            return scene;
+        };
+
+        createScene().then(sceneToRender => {
+            engine.runRenderLoop(() => sceneToRender.render());
+        });
+    </script>
+<img src="https://raw.githubusercontent.com/ykoba079/sample1/master/spmap_2020_4k.png"/>
+</body>
+</html>

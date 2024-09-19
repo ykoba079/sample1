@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>sample4_VR</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://cdn.babylonjs.com/materialsLibrary/babylon.gridMaterial.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+    </head>
+
+   <body style="background-color: antiquewhite;">
+       <script type="text/javascript" src="//xa.shinobi.jp/ufo/190862403"></script><noscript><a href="//xa.shinobi.jp/bin/gg?190862403" target="_blank"><img src="//xa.shinobi.jp/bin/ll?190862403" border="0"></a><br><span style="font-size:9px"><img style="margin:0;vertical-align:text-bottom;" src="//img.shinobi.jp/tadaima/fj.gif" width="19" height="11"> </span></noscript>
+       <canvas id="renderCanvas" style="height:1000px;border-style: dotted;" ></canvas>
+   </body>
+
+</html>
+
+
+
+<script>
+    var infoButton=null;
+    let guiCanvas;
+    let guiButton;
+    const canvas = document.getElementById("renderCanvas"); // Get the canvas element
+    const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+    const createScene = function () {
+    const scene = new BABYLON.Scene(engine);
+
+    const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 3, new BABYLON.Vector3(-2.5, 6, 18.5), scene);
+    camera.setTarget(new BABYLON.Vector3(-2, 4.2, 10.5),);
+    camera.wheelDeltaPercentage = 0.03;
+    camera.attachControl(canvas, true);
+    camera.minZ = 0.001;
+
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0.8, 1, 0.5), scene);
+    light.intensity = 0.8;
+
+    var hdrTexture = new BABYLON.CubeTexture("https://raw.githubusercontent.com/ykoba079/sample1/master/SpecularHDR.dds", scene);
+    scene.createDefaultSkybox(hdrTexture, true, 1000);	
+
+    BABYLON.SceneLoader.ImportMeshAsync("", "https://raw.githubusercontent.com/ykoba079/sample1/master/", "LHD8.glb").then((result) => {
+        result.meshes[0].scaling.x = 0.025;
+        result.meshes[0].scaling.y = 0.025;
+        result.meshes[0].scaling.z = -0.025;
+        result.meshes[0].position.x = -1.95;
+        result.meshes[0].position.y = 1.2;
+        result.meshes[0].position.z = 13.2;
+        result.meshes[0].rotate (BABYLON.Axis.Y,  -0.05, BABYLON.Space.WORLD);
+        for(i=0;i<result.meshes.length;i++){
+            result.meshes[i].isPickable = false;
+        }
+    });
+
+
+    var gizmoManager = new BABYLON.GizmoManager(scene);
+    gizmoManager.positionGizmoEnabled = true;
+
+    BABYLON.SceneLoader.ImportMeshAsync("", "https://raw.githubusercontent.com/ykoba079/sample1/master/", "heliengine.glb").then((result_engine) => {
+        result_engine.meshes[0].scaling.x = 0.05;
+        result_engine.meshes[0].scaling.y = 0.05;
+        result_engine.meshes[0].scaling.z = -0.05;
+        result_engine.meshes[0].position.x = -2.2;
+        result_engine.meshes[0].position.y = 1.15;
+        result_engine.meshes[0].position.z = 13.3;
+        //result_engine.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1 }, scene);
+        gizmoManager.attachableMeshes = [result_engine.meshes[0]];
+    });
+
+
+        BABYLON.SceneLoader.ImportMeshAsync("", "https://raw.githubusercontent.com/ykoba079/sample1/master/", "lu_30f.glb").then((result) => {
+            result.meshes[0].scaling.x = 1.0;
+            result.meshes[0].scaling.y = 1.0;
+            result.meshes[0].scaling.z = -1.00;
+            result.meshes[0].rotate (BABYLON.Axis.Y,  1.5, BABYLON.Space.WORLD);
+            result.meshes[0].position.x = -2.0;
+            result.meshes[0].position.z = 14.0;
+        });
+
+        // 簡単なメッシュを追加
+        const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);
+
+        return scene;
+    };
+
+    const scene = createScene(); 
+    engine.runRenderLoop(function () {
+            scene.render();
+    });
+
+
+    window.addEventListener("resize", function () {
+            engine.resize();
+    });
+
+    
+    const vrHelper = scene.createDefaultVRExperience();
+    vrHelper.enableInteractions();
+    vrHelper.enableTeleportation({
+            floorMeshes: [ground] // テレポート先として使用できるメッシュを指定
+        });
+
+    // VR準備完了後にテレポート機能を有効化
+    vrHelper.onAfterEnteringVRObservable.add(() => {
+
+        vrHelper.enableTeleportation({
+            floorMeshes: [ground] // テレポート先として使用できるメッシュを指定
+        });
+    });
+
+
+
+
+
+</script>

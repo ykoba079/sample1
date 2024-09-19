@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>sample4</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://cdn.babylonjs.com/materialsLibrary/babylon.gridMaterial.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+    </head>
+
+   <body style="background-color: antiquewhite;">
+       <script type="text/javascript" src="//xa.shinobi.jp/ufo/190862403"></script><noscript><a href="//xa.shinobi.jp/bin/gg?190862403" target="_blank"><img src="//xa.shinobi.jp/bin/ll?190862403" border="0"></a><br><span style="font-size:9px"><img style="margin:0;vertical-align:text-bottom;" src="//img.shinobi.jp/tadaima/fj.gif" width="19" height="11"> </span></noscript>
+       <canvas id="renderCanvas" style="height:1000px;border-style: dotted;" ></canvas>
+   </body>
+
+</html>
+
+
+<script>
+    var infoButton=null;
+    let guiCanvas;
+    let guiButton;
+    const canvas = document.getElementById("renderCanvas"); // Get the canvas element
+    const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+    const createScene = function () {
+    const scene = new BABYLON.Scene(engine);
+    const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 3, new BABYLON.Vector3(-2.5, 6, 18.5), scene);
+    camera.setTarget(new BABYLON.Vector3(-2, 4.2, 10.5),);
+    camera.wheelDeltaPercentage = 0.03;
+    camera.attachControl(canvas, true);
+    camera.minZ = 0.001;
+
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0.8, 1, 0.5), scene);
+    light.intensity = 0.8;
+
+        var hdrTexture = new BABYLON.CubeTexture("https://raw.githubusercontent.com/ykoba079/sample1/master/SpecularHDR.dds", scene);
+        scene.createDefaultSkybox(hdrTexture, true, 1000);	
+
+    BABYLON.SceneLoader.ImportMeshAsync("", "https://raw.githubusercontent.com/ykoba079/sample1/master/", "LHD11.glb").then((result) => {
+        result.meshes[0].scaling.x = 0.1;
+        result.meshes[0].scaling.y = 0.1;
+        result.meshes[0].scaling.z = -0.1;
+        result.meshes[0].position.x = -1.9;
+        result.meshes[0].position.y = 4.2;
+        result.meshes[0].position.z = 11.0;
+        result.meshes[0].rotate (BABYLON.Axis.Y,  -0.05, BABYLON.Space.WORLD);
+        for(i=0;i<result.meshes.length;i++){
+            result.meshes[i].isPickable = false;
+        }
+        result.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1 }, scene);
+    });
+
+
+    var gizmoManager = new BABYLON.GizmoManager(scene);
+    gizmoManager.positionGizmoEnabled = true;
+
+    BABYLON.SceneLoader.ImportMeshAsync("", "https://raw.githubusercontent.com/ykoba079/sample1/master/", "heliengine.glb").then((result_engine) => {
+        result_engine.meshes[0].scaling.x = 0.15;
+        result_engine.meshes[0].scaling.y = 0.15;
+        result_engine.meshes[0].scaling.z = -0.15;
+        result_engine.meshes[0].position.x = -2.8;
+        result_engine.meshes[0].position.y = 3.9;
+        result_engine.meshes[0].position.z = 12;
+        result_engine.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1 }, scene);
+        gizmoManager.attachableMeshes = [result_engine.meshes[0]];
+    });
+
+
+    BABYLON.SceneLoader.ImportMeshAsync("", "https://raw.githubusercontent.com/ykoba079/sample1/master/", "lucent_30fb.glb").then((result) => {
+        result.meshes[0].scaling.x = 4.0;
+        result.meshes[0].scaling.y = 4.0;
+        result.meshes[0].scaling.z = -4.00;
+        result.meshes[0].rotate (BABYLON.Axis.Y,  1.5, BABYLON.Space.WORLD);
+        result.meshes[0].position.x = -2.0;
+        result.meshes[0].position.y = 0.2;
+        result.meshes[0].position.z = 13.8;
+//        for(i=0;i<result.meshes.length;i++){
+        //    result.meshes[i].isPickable = false;
+//        }
+        result.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1 }, scene);
+    });
+
+
+
+
+
+  
+    const radius = 0.42;  // トーラスの主半径
+    const segments = 94;  // トーラスの周方向の分割数
+    const tubeSegments = 44;  // 楕円の断面の分割数
+    const twists = 6;  // 1周で6回転させる
+
+    // 楕円形の断面を定義する関数
+    function createEllipse(radiusX, radiusY, segments) {
+        const ellipse = [];
+        for (let i = 0; i <= segments; i++) {
+            const theta = (i / segments) * Math.PI * 2; // 0から2πまで
+            const x = Math.cos(theta) * radiusX;
+            const y = Math.sin(theta) * radiusY;
+            ellipse.push(new BABYLON.Vector3(x, y, 0));
+        }
+        return ellipse;
+    }
+
+    
+    // トーラスの中心パス（円形）を生成
+    var pathArray = [];
+    const paths = [];
+
+    // トーラスの断面を定義（横幅1、高さ0.5）
+    var initialEllipsePath = createEllipse(0.01, 0.01, tubeSegments);
+    for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;  // 0から2πまで
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+
+        // 断面の回転角度を計算（1周で4回転させる）
+        const rotationProgress = (i / segments);  // 0から1の範囲
+        const twistAngle = rotationProgress * Math.PI * 2 * twists;  // 0から8πまで（4回転）
+
+        // 幅と高さを変化させる（1/4周ごとに変形する）
+        const width = 1.5 + 0.5 * Math.sin(twistAngle);
+        const height = 1.5 + 0.5 * Math.sin(twistAngle);
+
+        // 楕円の断面を回転させて配置
+        const path = initialEllipsePath.map(point => {
+            // トーラスの原点方向へのベクトル
+            const toCenterVector = new BABYLON.Vector3(-x, 0, -z).normalize();
+
+            // 断面の横幅と高さを変形
+            const transformedX = point.x * width;
+            const transformedY = point.y * height;
+
+            // 楕円の断面を回転させる
+            const rotatedX = transformedX * Math.cos(twistAngle) - transformedY * Math.sin(twistAngle);
+            const rotatedY = transformedX * Math.sin(twistAngle) + transformedY * Math.cos(twistAngle);
+
+            // 断面をトーラスの中心に向けるために向きを調整
+            const adjustedPoint = new BABYLON.Vector3(
+                rotatedX * toCenterVector.x - rotatedY * toCenterVector.z,
+                rotatedY,
+                rotatedX * toCenterVector.z + rotatedY * toCenterVector.x
+            );
+
+            return new BABYLON.Vector3(
+                adjustedPoint.x + x,  // 楕円のX位置を中心パスの位置に追加
+                adjustedPoint.y,  // 楕円のY位置
+                adjustedPoint.z + z   // 楕円のZ位置を中心パスの位置に追加
+            );
+        });
+
+        paths.push(path);
+        
+    }
+
+    // 楕円断面のトーラスメッシュを作成
+    const torus = BABYLON.MeshBuilder.CreateRibbon("torus", {
+        updatable:true,
+        pathArray: paths,
+        closePath: true,
+        closeArray: true,
+        sideOrientation: BABYLON.Mesh.DOUBLESIDE
+    }, scene);
+
+    // マテリアルの設定（オプション）
+    const material = new BABYLON.StandardMaterial("torusMaterial", scene);
+    //material.diffuseColor = new BABYLON.Color3(0.97, 0.76, 0.9);  // トーラスの色
+    //material.alpha=0.5;
+    material.emissiveColor = new BABYLON.Color3(1, 0.4, 0.6); // 赤く発光
+
+    torus.material = material;
+    
+
+    var plzSize =11;
+    var plzSizeMax = 100;
+    var plsSizeAdd = 1;
+ 
+    const observer = scene.onBeforeRenderObservable.add(function(){
+        if(plzSize >= plzSizeMax ){
+            plsSizeAdd = -1;
+        }
+        if(plzSize <= 5 ){
+            plsSizeAdd = 1;
+        }
+        plzSize += plsSizeAdd;
+
+        pathArray.length=0;
+
+        var initialEllipsePath = createEllipse(plzSize*0.0002, plzSize*0.0001, tubeSegments);
+        for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;  // 0から2πまで
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+
+            // 断面の回転角度を計算（1周で4回転させる）
+            const rotationProgress = (i / segments);  // 0から1の範囲
+            const twistAngle = rotationProgress * Math.PI * 2 * twists;  // 0から8πまで（4回転）
+
+            // 幅と高さを変化させる（1/4周ごとに変形する）
+            const width = 1.5 + 0.5 * Math.sin(twistAngle);
+            const height = 1.5 + 0.5 * Math.sin(twistAngle);
+
+            // 楕円の断面を回転させて配置
+            const path = initialEllipsePath.map(point => {
+                // トーラスの原点方向へのベクトル
+                const toCenterVector = new BABYLON.Vector3(-x, 0, -z).normalize();
+
+                // 断面の横幅と高さを変形
+                const transformedX = point.x * width;
+                const transformedY = point.y * height;
+
+                // 楕円の断面を回転させる
+                const rotatedX = transformedX * Math.cos(twistAngle) - transformedY * Math.sin(twistAngle);
+                const rotatedY = transformedX * Math.sin(twistAngle) + transformedY * Math.cos(twistAngle);
+
+                // 断面をトーラスの中心に向けるために向きを調整
+                const adjustedPoint = new BABYLON.Vector3(
+                    rotatedX * toCenterVector.x - rotatedY * toCenterVector.z -1.9 ,
+                    rotatedY + 4.185,
+                    rotatedX * toCenterVector.z + rotatedY * toCenterVector.x +11.05
+                );
+
+                pathArray.push(adjustedPoint.x + x, adjustedPoint.y,adjustedPoint.z + z) ;
+            });
+        }
+
+        torus.updateVerticesData(BABYLON.VertexBuffer.PositionKind,pathArray);
+        //material.alpha=plsSizeAdd/10;
+        //torus.material = material;
+    })
+
+
+
+        return scene;
+    };
+    const scene = createScene(); 
+    engine.runRenderLoop(function () {
+            scene.render();
+    });
+
+    window.addEventListener("resize", function () {
+            engine.resize();
+    });
+
+
+
+
+
+
+
+
+
+
+</script>
